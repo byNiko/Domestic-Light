@@ -1,0 +1,28 @@
+body {
+  font-family: sans-serif;
+}
+
+#map {
+  height: 100vh;
+}
+
+.marker-cluster {
+  background-color: hsla(0, 0%, 100%, 0.7);
+  border-radius: 50%;
+  width: clamp(20px, 1vw, 50px);
+  height: clamp(20px, 1vw, 50px);
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 1px solid #ccc;
+  /* box-shadow: 0 0 10px orange; */
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.51rem;
+  font-weight: 700;
+}
+
+.leaflet-popup-content {
+  font-size: 11px;
+}
