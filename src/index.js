@@ -11,6 +11,7 @@ import { colorList, wavelengthToHSL } from "./convertColors";
 import { tmg } from "./transverseMercatorUTMGrid";
 
 // const setups
+const autoRefresh = false;
 const map = L.map("map").setView([0, -0.0], 3);
 
 // setup External Locations in geo JSON list
@@ -24,11 +25,11 @@ myHeaders.append(
 const requestOptions = {
   method: "GET",
   headers: myHeaders,
-  redirect: "follow"
+  redirect: "follow",
 };
 
 // internal website endpoint
-const userUrl = "/wp-json/dl/v1/user";
+const userUrl = "https://dev1.3n.design/wp-json/dl/v1/user";
 // functions
 async function fetchJson(url, requestOptions) {
   const resp = await fetch(url, requestOptions);
@@ -50,22 +51,26 @@ function iconCreateFunction(cluster) {
 
   return new L.DivIcon({
     html: `<span>${childCount}</span>`,
-    className: "marker-cluster" + c
+    className: "marker-cluster" + c,
   });
 }
 
 function makePopup(feature) {
+  console.log("making popup");
   let popupContent = "";
   if (feature.properties) {
     popupContent += `
     <div id="${feature.properties.uuid}" class="popup-container">
     <h1>Hello ${feature.properties.hostname}</h1>
+   
     <div class="properties-items">`;
     if (Object.keys(feature.properties.colors).length > 0)
       for (const key in feature.properties.colors) {
         popupContent += `<div>${colorList[key]} : ${feature.properties.colors[key]}</div>`;
       }
+    popupContent += ` <div class="test"></div>`;
     popupContent += `<a href="/sensor-host/${feature.properties.uuid}" class="popup-link author-info">Author Info</a>`;
+
     popupContent += ` </div></div>`;
   }
   return popupContent;
@@ -75,42 +80,51 @@ function geojsonMarkerOptions(feature) {
   return {
     id: feature.properties.uuid,
     radius: 5,
-    // fillColor: `hsl(${feature.properties.marker_hsl[0]},${feature.properties.marker_hsl[1]},${feature.properties.marker_hsl[2]})`,
     fillColor: feature.properties.marker_color,
     color: "#000",
     weight: 1,
     opacity: 1,
-    fillOpacity: 0.78
+    fillOpacity: 0.78,
   };
 }
+
+const features = {};
 
 function pointToLayer(feature, latlng) {
   var m = L.circleMarker(latlng, geojsonMarkerOptions(feature));
   m.bindPopup(makePopup(feature));
-  m.id = "feature.properties.uuid";
+  m.dlID = feature.properties.uuid;
   markers.addLayer(m);
   return markers;
 }
 
 function onEachFeature(feature, layer) {
-  // console.log('f', feature)
+  features[feature.properties.uuid] = feature;
+  feature.dlID = feature.properties.uuid;
   if (feature.properties && feature.properties.uuid) {
     if (feature.properties.uuid === clickedId) {
-      layer.popupToOpen;
     }
   }
 }
 
 // load map providers
-const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19,
-  noWrap: true,
-  bounds: [
-    [-90, -180],
-    [90, 180]
-  ],
-  attribution: "&copy; Open Street Map"
-}).addTo(map);
+// https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ
+// const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+const osm = L.tileLayer(
+  // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+  // "https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ",
+  "https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ",
+  {
+    maxZoom: 19,
+    noWrap: true,
+    bounds: [
+      [-90, -180],
+      [90, 180],
+    ],
+    attribution:
+      '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  }
+).addTo(map);
 
 // const USGS_USImagery = L.tileLayer(
 //   "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}",
@@ -130,7 +144,7 @@ const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 // };
 
 // transverse mercator Grid
-let mercatorGrid = L.geoJSON(tmg).addTo(map);
+// let mercatorGrid = L.geoJSON(tmg).addTo(map);
 const markerClusterGroupOptions = {
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: true,
@@ -139,32 +153,61 @@ const markerClusterGroupOptions = {
   maxClusterRadius: function (zoom) {
     return 10;
   },
-  iconCreateFunction: iconCreateFunction
+  iconCreateFunction: iconCreateFunction,
 };
 let markers = window.L.markerClusterGroup(markerClusterGroupOptions);
 
 var clickedId;
-var popupToOpen;
+var popupToOpen = false;
+let openedPopup = false;
 
 // this is our app
 (async function init() {
-  // get the data
+  // get the sensor data
   const sensors = await fetchJson(geoJSONUrl, requestOptions);
   markers.clearLayers();
   const geoJson = window.L.geoJSON(sensors, {
     onEachFeature: onEachFeature,
-    pointToLayer: pointToLayer
+    pointToLayer: pointToLayer,
   }).addTo(map);
+  console.log("f", Object.keys(features).length);
+  geoJson.eachLayer(function (e) {
+    console.log("layers", e);
+  });
 
-  //console.log("here", geoJson);
-  // refresh sensor data
-  // setTimeout(init, 150000);
+  geoJson.on("click", (e) => {
+    console.log("clicked", e);
+    console.log("open?", geoJson.isPopupOpen());
+  });
+  console.log("here", features);
+  // map.openPopup(features["e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02"]);
+  if (popupToOpen) {
+    // map.openPopup(popupToOpen);
+    console.log("open?", geoJson.isPopupOpen());
+  }
+
+  if (autoRefresh) setTimeout(init, autoRefresh);
 })();
 
-map.on("popupopen", (e) => {
-  console.log("open", e.target._popup._leaflet_id);
-  console.log("e", e.target);
-  clickedId = e.target._popup._leaflet_id;
+async function postPopulatePopup(node) {
+  const userData = await fetchJson(
+    `${userUrl}/e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02`
+  );
+  node._contentNode.querySelector(
+    ".test"
+  ).innerHTML = `<h3>${userData.data.display_name}</h3>`;
+}
+
+map.on("popupopen", async (e) => {
+  console.log("e", e);
+  postPopulatePopup(e.popup);
+  popupToOpen = e.popup;
+
+  // return;
 });
+// map.on("popupclose", (e) => {
+//   console.log("e", e);
+//   popupToOpen = false;
+// });
 
 // L.control.layers(baseMaps).addTo(map);
