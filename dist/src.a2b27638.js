@@ -17530,7 +17530,20 @@ var process = require("process");
 }));
 
 
-},{"process":"node_modules/process/browser.js"}],"src/convertColors.js":[function(require,module,exports) {
+},{"process":"node_modules/process/browser.js"}],"src/secrets.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.MAPBOX_TOKEN = exports.GEO_TOKEN = exports.BEARER_TOKEN = void 0;
+var GEO_TOKEN = "01PnfYABfF7j";
+exports.GEO_TOKEN = GEO_TOKEN;
+var BEARER_TOKEN = "cqyt1wl6pl87vdcb0yzwls5g34176a33gp6h82nh";
+exports.BEARER_TOKEN = BEARER_TOKEN;
+var MAPBOX_TOKEN = "pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ";
+exports.MAPBOX_TOKEN = MAPBOX_TOKEN;
+},{}],"src/convertColors.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -34494,6 +34507,7 @@ require("leaflet/dist/leaflet.css");
 require("./styles.css");
 var L = _interopRequireWildcard(require("leaflet"));
 require("leaflet.markercluster");
+var SECRETS = _interopRequireWildcard(require("./secrets"));
 var _convertColors = require("./convertColors");
 var _transverseMercatorUTMGrid = require("./transverseMercatorUTMGrid");
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
@@ -34509,10 +34523,10 @@ var autoRefresh = false;
 var map = L.map("map").setView([0, -0.0], 3);
 
 // setup External Locations in geo JSON list
-var geoToken = "01PnfYABfF7j";
+var geoToken = SECRETS.GEO_TOKEN;
 var geoJSONUrl = "https://api.json-generator.com/templates/".concat(geoToken, "/data");
 var myHeaders = new Headers();
-myHeaders.append("Authorization", "Bearer cqyt1wl6pl87vdcb0yzwls5g34176a33gp6h82nh");
+myHeaders.append("Authorization", "Bearer ".concat(SECRETS.BEARER_TOKEN));
 var requestOptions = {
   method: "GET",
   headers: myHeaders,
@@ -34607,10 +34621,9 @@ function onEachFeature(feature, layer) {
 // load map providers
 // https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ
 // const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-var osm = L.tileLayer(
-// "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-// "https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ",
-"https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ", {
+var osm = L.tileLayer( // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+// `https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=${SECRETS.MAPBOX_TOKEN},
+"https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=".concat(SECRETS.MAPBOX_TOKEN), {
   maxZoom: 19,
   noWrap: true,
   bounds: [[-90, -180], [90, 180]],
@@ -34741,7 +34754,7 @@ map.on("popupopen", /*#__PURE__*/function () {
 // });
 
 // L.control.layers(baseMaps).addTo(map);
-},{"leaflet/dist/leaflet.css":"node_modules/leaflet/dist/leaflet.css","./styles.css":"src/styles.css","leaflet":"node_modules/leaflet/dist/leaflet-src.js","leaflet.markercluster":"node_modules/leaflet.markercluster/dist/leaflet.markercluster-src.js","./convertColors":"src/convertColors.js","./transverseMercatorUTMGrid":"src/transverseMercatorUTMGrid.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"leaflet/dist/leaflet.css":"node_modules/leaflet/dist/leaflet.css","./styles.css":"src/styles.css","leaflet":"node_modules/leaflet/dist/leaflet-src.js","leaflet.markercluster":"node_modules/leaflet.markercluster/dist/leaflet.markercluster-src.js","./secrets":"src/secrets.js","./convertColors":"src/convertColors.js","./transverseMercatorUTMGrid":"src/transverseMercatorUTMGrid.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -34766,7 +34779,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "36555" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "34219" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];

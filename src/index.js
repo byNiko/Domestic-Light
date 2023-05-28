@@ -7,6 +7,7 @@ import * as L from "leaflet";
 import "leaflet.markercluster";
 
 // custom
+import * as SECRETS from "./secrets";
 import { colorList, wavelengthToHSL } from "./convertColors";
 import { tmg } from "./transverseMercatorUTMGrid";
 
@@ -15,13 +16,10 @@ const autoRefresh = false;
 const map = L.map("map").setView([0, -0.0], 3);
 
 // setup External Locations in geo JSON list
-const geoToken = "01PnfYABfF7j";
+const geoToken = SECRETS.GEO_TOKEN;
 const geoJSONUrl = `https://api.json-generator.com/templates/${geoToken}/data`;
 const myHeaders = new Headers();
-myHeaders.append(
-  "Authorization",
-  "Bearer cqyt1wl6pl87vdcb0yzwls5g34176a33gp6h82nh"
-);
+myHeaders.append("Authorization", `Bearer ${SECRETS.BEARER_TOKEN}`);
 const requestOptions = {
   method: "GET",
   headers: myHeaders,
@@ -112,8 +110,8 @@ function onEachFeature(feature, layer) {
 // const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const osm = L.tileLayer(
   // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-  // "https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ",
-  "https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ",
+  // `https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=${SECRETS.MAPBOX_TOKEN},
+  `https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=${SECRETS.MAPBOX_TOKEN}`,
   {
     maxZoom: 19,
     noWrap: true,
