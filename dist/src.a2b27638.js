@@ -17539,9 +17539,9 @@ Object.defineProperty(exports, "__esModule", {
 exports.MAPBOX_TOKEN = exports.GEO_TOKEN = exports.BEARER_TOKEN = void 0;
 var GEO_TOKEN = "01PnfYABfF7j";
 exports.GEO_TOKEN = GEO_TOKEN;
-var BEARER_TOKEN = "cqyt1wl6pl87vdcb0yzwls5g34176a33gp6h82nh";
+var BEARER_TOKEN = "6d8sw0n5fcw3eoxprf9gv3c5cztk6pfy3kjtg071";
 exports.BEARER_TOKEN = BEARER_TOKEN;
-var MAPBOX_TOKEN = "pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ";
+var MAPBOX_TOKEN = "pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaTdndm82NTFuZHozZW11bHF2dG03YnkifQ.0xjeiaMscCagf59DBFfXnA";
 exports.MAPBOX_TOKEN = MAPBOX_TOKEN;
 },{}],"src/convertColors.js":[function(require,module,exports) {
 "use strict";
@@ -34779,7 +34779,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "34219" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "35313" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
