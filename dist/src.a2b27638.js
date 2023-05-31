@@ -17530,19 +17530,48 @@ var process = require("process");
 }));
 
 
-},{"process":"node_modules/process/browser.js"}],"src/secrets.js":[function(require,module,exports) {
+},{"process":"node_modules/process/browser.js"}],"src/minZoom.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.MAPBOX_TOKEN = exports.GEO_TOKEN = exports.BEARER_TOKEN = void 0;
-var GEO_TOKEN = "01PnfYABfF7j";
-exports.GEO_TOKEN = GEO_TOKEN;
-var BEARER_TOKEN = "6d8sw0n5fcw3eoxprf9gv3c5cztk6pfy3kjtg071";
-exports.BEARER_TOKEN = BEARER_TOKEN;
-var MAPBOX_TOKEN = "pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaTdndm82NTFuZHozZW11bHF2dG03YnkifQ.0xjeiaMscCagf59DBFfXnA";
-exports.MAPBOX_TOKEN = MAPBOX_TOKEN;
+exports.minZoom = void 0;
+// Get the largest screen dimension 
+// reason for doing this is a phone may start in portrait then move to landscape
+var maxScreenDimension = window.innerHeight > window.innerWidth ? window.innerHeight : window.innerWidth;
+
+// assuming tiles are 256 x 256
+var tileSize = 256;
+
+// How many tiles needed to for the largest screen dimension
+// I take the floor because I don't want to see more then 1 world
+// Use Math.ceil if you don't mind seeing the world repeat
+var maxTiles = Math.floor(maxScreenDimension / tileSize);
+
+/* MATH MAGIC !!!!!
+    number of tiles needed for one side = 2 ^ zoomlevel
+    or
+    maxTiles = 2 ^ zoomlevel
+    Time to show my steps! assuming log base 2 for all steps
+    
+    log(2 ^ zoomlevel) = log(maxTiles)
+    properties of logs
+    zoomlevel * log(2) = log(maxTiles)
+    log base 2 of 2 is just 1
+    zoomlevel * 1 = log(maxTiles)
+    JS Math.log is ln (natural log) not base 2
+    So we need to use another log property
+    Math.log(maxTiles) / Math.log(2) = Log base 2 of maxTiles
+*/
+
+// I am taking the ceiling so I don't see more then 1 world
+// Use Math.floor if you don't mind seeing the world repeat
+var minZoom = Math.ceil(Math.log(maxTiles) / Math.log(2));
+
+// only let minZoom be 2 or higher
+exports.minZoom = minZoom;
+exports.minZoom = minZoom = minZoom < 2 ? 2 : minZoom;
 },{}],"src/convertColors.js":[function(require,module,exports) {
 "use strict";
 
@@ -34501,13 +34530,14 @@ var tmg = {
 };
 exports.tmg = tmg;
 },{}],"src/index.js":[function(require,module,exports) {
+var define;
 "use strict";
 
 require("leaflet/dist/leaflet.css");
 require("./styles.css");
 var L = _interopRequireWildcard(require("leaflet"));
 require("leaflet.markercluster");
-var SECRETS = _interopRequireWildcard(require("./secrets"));
+var _minZoom = require("./minZoom");
 var _convertColors = require("./convertColors");
 var _transverseMercatorUTMGrid = require("./transverseMercatorUTMGrid");
 function _getRequireWildcardCache(nodeInterop) { if (typeof WeakMap !== "function") return null; var cacheBabelInterop = new WeakMap(); var cacheNodeInterop = new WeakMap(); return (_getRequireWildcardCache = function (nodeInterop) { return nodeInterop ? cacheNodeInterop : cacheBabelInterop; })(nodeInterop); }
@@ -34518,15 +34548,25 @@ function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) { try
 function _asyncToGenerator(fn) { return function () { var self = this, args = arguments; return new Promise(function (resolve, reject) { var gen = fn.apply(self, args); function _next(value) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value); } function _throw(err) { asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err); } _next(undefined); }); }; } // styles
 // libraries
 // custom
+console.log('zoom', _minZoom.minZoom);
+
 // const setups
 var autoRefresh = false;
-var map = L.map("map").setView([0, -0.0], 3);
+var map = L.map("map", {
+  crs: L.CRS.EPSG4326,
+  center: [0, 0],
+  zoom: 3,
+  bounds: [[-90, -180], [90, 180]],
+  maxBounds: [[-90, -180], [90, 180]],
+  minZoom: _minZoom.minZoom
+});
+
+// map.setMaxBounds( map.getBounds())
 
 // setup External Locations in geo JSON list
-var geoToken = SECRETS.GEO_TOKEN;
-var geoJSONUrl = "https://api.json-generator.com/templates/".concat(geoToken, "/data");
+var geoJSONUrl = "https://api.json-generator.com/templates/".concat("01PnfYABfF7j", "/data");
 var myHeaders = new Headers();
-myHeaders.append("Authorization", "Bearer ".concat(SECRETS.BEARER_TOKEN));
+myHeaders.append("Authorization", "Bearer ".concat("6d8sw0n5fcw3eoxprf9gv3c5cztk6pfy3kjtg071"));
 var requestOptions = {
   method: "GET",
   headers: myHeaders,
@@ -34585,7 +34625,7 @@ function makePopup(feature) {
     if (Object.keys(feature.properties.colors).length > 0) for (var key in feature.properties.colors) {
       popupContent += "<div>".concat(_convertColors.colorList[key], " : ").concat(feature.properties.colors[key], "</div>");
     }
-    popupContent += " <div class=\"test\"></div>";
+    popupContent += " <div class=\"injected-content\"></div>";
     popupContent += "<a href=\"/sensor-host/".concat(feature.properties.uuid, "\" class=\"popup-link author-info\">Author Info</a>");
     popupContent += " </div></div>";
   }
@@ -34602,50 +34642,39 @@ function geojsonMarkerOptions(feature) {
     fillOpacity: 0.78
   };
 }
-var features = {};
+var geoLayers = {};
+function onEachFeature(feature, layer) {
+  console.log("feature", layer);
+  feature.dlID = feature.properties.uuid;
+
+  // put all features into object
+  geoLayers[feature.properties.uuid] = layer;
+  if (feature.properties && feature.properties.uuid) {
+    if (feature.properties.uuid === clickedId) {}
+  }
+}
 function pointToLayer(feature, latlng) {
+  // console.log("new feature", feature);
   var m = L.circleMarker(latlng, geojsonMarkerOptions(feature));
   m.bindPopup(makePopup(feature));
   m.dlID = feature.properties.uuid;
   markers.addLayer(m);
   return markers;
 }
-function onEachFeature(feature, layer) {
-  features[feature.properties.uuid] = feature;
-  feature.dlID = feature.properties.uuid;
-  if (feature.properties && feature.properties.uuid) {
-    if (feature.properties.uuid === clickedId) {}
-  }
-}
-
 // load map providers
-// https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=pk.eyJ1IjoiYnluaWtvIiwiYSI6ImNsaHc1Yzd4ejBkeGEzZ3FhZ3gzcnJ4ZXgifQ.UEK-IhDaBU0oVIu61ZraIQ
-// const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-var osm = L.tileLayer( // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-// `https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=${SECRETS.MAPBOX_TOKEN},
-"https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=".concat(SECRETS.MAPBOX_TOKEN), {
-  maxZoom: 19,
+var osm = L.tileLayer( // `https://api.maptiler.com/maps/basic-4326/{z}/{x}/{y}.png?key=${process.env.MAP_TILER_KEY}`,
+"https://api.maptiler.com/maps/basic-4326/256/{z}/{x}/{y}@2x.png?key=BFPs9C5VBhPV4bZwUJ9E",
+// "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+// "http://tilecache.osgeo.org/wms-c/tilecache.py/1.0.0/basic/5/32/23.png",
+// `https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.MAPBOX_TOKEN}`,
+// `https://api.mapbox.com/styles/v1/byniko/cli4z3nkl00bq01r62l4b47tw/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.MAPBOX_TOKEN}`,
+// `http://{s}.tile.cloudmade.com/9c844409f5b845ae93ac38388077f90a/997/256/{z}/{x}/{y}.png`,
+{
+  tms: false,
+  maxZoom: 13,
   noWrap: true,
-  bounds: [[-90, -180], [90, 180]],
-  attribution: '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  attribution: '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <img  src="https://api.maptiler.com/resources/logo.svg">'
 }).addTo(map);
-
-// const USGS_USImagery = L.tileLayer(
-//   "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}",
-//   {
-//     maxZoom: 8,
-//     attribution:
-//       'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>'
-//   }
-// );
-
-// L.tileLayer.provider("USGS.USImagery").addTo(map);
-
-// leaflet layer control
-// const baseMaps = {
-//   "Open Street Map": osm,
-//   "USGS Imagery": USGS_USImagery
-// };
 
 // transverse mercator Grid
 // let mercatorGrid = L.geoJSON(tmg).addTo(map);
@@ -34653,9 +34682,10 @@ var markerClusterGroupOptions = {
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: true,
   zoomToBoundsOnClick: true,
+  disableClusteringAtZoom: 4,
   chunkedLoading: true,
   maxClusterRadius: function maxClusterRadius(zoom) {
-    return 10;
+    return 20;
   },
   iconCreateFunction: iconCreateFunction
 };
@@ -34679,23 +34709,24 @@ var openedPopup = false;
           geoJson = window.L.geoJSON(sensors, {
             onEachFeature: onEachFeature,
             pointToLayer: pointToLayer
-          }).addTo(map);
-          console.log("f", Object.keys(features).length);
-          geoJson.eachLayer(function (e) {
-            console.log("layers", e);
+          }).addTo(map); // console.log("f", Object.keys(features).length);
+          console.log("all markers", markers);
+          console.log("layers", geoLayers);
+          map.removeLayer(2);
+          map.on("click", function (e) {
+            console.log("geo json clicked", e);
           });
-          geoJson.on("click", function (e) {
-            console.log("clicked", e);
-            console.log("open?", geoJson.isPopupOpen());
-          });
-          console.log("here", features);
+          // console.log("here", features);
           // map.openPopup(features["e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02"]);
           if (popupToOpen) {
             // map.openPopup(popupToOpen);
             console.log("open?", geoJson.isPopupOpen());
           }
+          map.on("layeradd", function (e) {
+            console.log("added", e);
+          });
           if (autoRefresh) setTimeout(init, autoRefresh);
-        case 11:
+        case 12:
         case "end":
           return _context.stop();
       }
@@ -34706,12 +34737,12 @@ var openedPopup = false;
   }
   return init;
 })()();
-function postPopulatePopup(_x3) {
+function postPopulatePopup(_x3, _x4) {
   return _postPopulatePopup.apply(this, arguments);
 }
 function _postPopulatePopup() {
-  _postPopulatePopup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(node) {
-    var userData;
+  _postPopulatePopup = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee4(node, feature) {
+    var userData, targetDiv;
     return _regeneratorRuntime().wrap(function _callee4$(_context4) {
       while (1) switch (_context4.prev = _context4.next) {
         case 0:
@@ -34719,8 +34750,9 @@ function _postPopulatePopup() {
           return fetchJson("".concat(userUrl, "/e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02"));
         case 2:
           userData = _context4.sent;
-          node._contentNode.querySelector(".test").innerHTML = "<h3>".concat(userData.data.display_name, "</h3>");
-        case 4:
+          targetDiv = node._contentNode.querySelector(".injected-content");
+          targetDiv.innerHTML = "<h3>".concat(userData.data.display_name, "</h3>");
+        case 5:
         case "end":
           return _context4.stop();
       }
@@ -34733,28 +34765,43 @@ map.on("popupopen", /*#__PURE__*/function () {
     return _regeneratorRuntime().wrap(function _callee2$(_context2) {
       while (1) switch (_context2.prev = _context2.next) {
         case 0:
-          console.log("e", e);
+          // console.log("popup event", e);
           postPopulatePopup(e.popup);
           popupToOpen = e.popup;
 
           // return;
-        case 3:
+        case 2:
         case "end":
           return _context2.stop();
       }
     }, _callee2);
   }));
-  return function (_x4) {
+  return function (_x5) {
     return _ref.apply(this, arguments);
   };
 }());
+
 // map.on("popupclose", (e) => {
 //   console.log("e", e);
 //   popupToOpen = false;
 // });
 
+// const USGS_USImagery = L.tileLayer(
+//   "https://basemap.nationalmap.gov/arcgis/rest/services/USGSImageryOnly/MapServer/tile/{z}/{y}/{x}",
+//   {
+//     maxZoom: 8,
+//     attribution:
+//       'Tiles courtesy of the <a href="https://usgs.gov/">U.S. Geological Survey</a>',
+//   }
+// );
+
+// leaflet layer control
+// const baseMaps = {
+//   "Open Street Map": osm,
+//   "USGS Imagery": USGS_USImagery,
+// };
 // L.control.layers(baseMaps).addTo(map);
-},{"leaflet/dist/leaflet.css":"node_modules/leaflet/dist/leaflet.css","./styles.css":"src/styles.css","leaflet":"node_modules/leaflet/dist/leaflet-src.js","leaflet.markercluster":"node_modules/leaflet.markercluster/dist/leaflet.markercluster-src.js","./secrets":"src/secrets.js","./convertColors":"src/convertColors.js","./transverseMercatorUTMGrid":"src/transverseMercatorUTMGrid.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"leaflet/dist/leaflet.css":"node_modules/leaflet/dist/leaflet.css","./styles.css":"src/styles.css","leaflet":"node_modules/leaflet/dist/leaflet-src.js","leaflet.markercluster":"node_modules/leaflet.markercluster/dist/leaflet.markercluster-src.js","./minZoom":"src/minZoom.js","./convertColors":"src/convertColors.js","./transverseMercatorUTMGrid":"src/transverseMercatorUTMGrid.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -34779,7 +34826,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "35313" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "33379" + '/');
   ws.onmessage = function (event) {
     checkedAssets = {};
     assetsToAccept = [];
