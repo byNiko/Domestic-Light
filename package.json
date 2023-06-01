@@ -8,8 +8,10 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
+    "chart.js": "^4.3.0",
     "leaflet": "1.9.3",
     "leaflet-providers": "1.13.0",
+    "leaflet-realtime": "^2.2.0",
     "leaflet.markercluster": "1.5.3",
     "parcel-bundler": "^1.6.1",
     "supercluster": "7.1.5"

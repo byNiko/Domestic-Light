@@ -5,36 +5,20 @@ import "./styles.css";
 // libraries
 import * as L from "leaflet";
 import "leaflet.markercluster";
+import "leaflet-realtime";
+import { makeChart } from "./makeChart";
+
+// import Chart from "chart.js/auto";
 
 // custom
-import {minZoom} from './minZoom';
+// import data from './testData';
+import { minZoom } from "./minZoom";
 import { colorList, wavelengthToHSL } from "./convertColors";
 import { tmg } from "./transverseMercatorUTMGrid";
 
-
-console.log('zoom', minZoom)
-
-// const setups
-const autoRefresh = false;
-const map = L.map("map", {
-  crs: L.CRS.EPSG4326,
-  center: [0, 0],
-  zoom: 3,
-  bounds: [
-      [-90, -180],
-      [90, 180],
-    ],
-    maxBounds: [
-      [-90, -180],
-      [90, 180],
-    ],
-  minZoom: minZoom,
-});
-
-// map.setMaxBounds( map.getBounds())
-
-// setup External Locations in geo JSON list
-const geoJSONUrl = `https://api.json-generator.com/templates/${process.env.GEO_TOKEN}/data`;
+// setup External Locations (geo JSON list)
+// const geoJSONUrl = `https://api.json-generator.com/templates/${process.env.GEO_TOKEN}/data`;
+const geoJSONUrl = `https://byniko.com/test.json`;
 const myHeaders = new Headers();
 myHeaders.append("Authorization", `Bearer ${process.env.BEARER_TOKEN}`);
 const requestOptions = {
@@ -42,6 +26,71 @@ const requestOptions = {
   headers: myHeaders,
   redirect: "follow",
 };
+
+const map = L.map("map", {
+  crs: L.CRS.EPSG4326,
+  center: [0, 0],
+  zoom: 3,
+  bounds: [
+    [-90, -180],
+    [90, 180],
+  ],
+  maxBounds: [
+    [-90, -180],
+    [90, 180],
+  ],
+  minZoom: 1, //minZoom,
+});
+
+// const autoRefresh = false;
+const realtime = window.L.realtime(
+  {
+    url: `https://api.json-generator.com/templates/ZO47fMwlUBuX/data`, //geoJSONUrl,
+    crossOrigin: true,
+    type: "json",
+    headers: myHeaders,
+    method: "GET",
+    redirect: "follow",
+  },
+  {
+    interval: 10000,
+    container: L.geoJson(),
+    removeMissing: true,
+    onEachFeature: onEachFeature,
+    pointToLayer: pointToLayer,
+    getFeatureId: function (featureData) {
+      return featureData.properties.uuid;
+    },
+    updateFeature: function (e) {
+      // console.log("update", e);
+      return false;
+    },
+  }
+);
+
+realtime.addTo(map);
+
+realtime.on("update", (f) => {
+  // console.log("re", realtime);
+  console.log("realtime working", f);
+  const updateFeaturePopup = function (fId) {
+    this.remove(getFeature(fId));
+
+    console.log(
+      "bool",
+      JSON.stringify(f.update[fId]) === JSON.stringify(f.features[fId])
+    );
+    realtime.getLayer(fId).getPopup().setContent("hello!");
+  };
+
+  const bindFeaturePopup = function (fId) {
+    realtime.getLayer(fId).bindPopup("new content?");
+  };
+
+  Object.keys(f.update).forEach(updateFeaturePopup);
+});
+
+// map.setMaxBounds( map.getBounds())
 
 // internal website endpoint
 const userUrl = "https://dev1.3n.design/wp-json/dl/v1/user";
@@ -71,7 +120,7 @@ function iconCreateFunction(cluster) {
 }
 
 function makePopup(feature) {
-  console.log("making popup");
+  // console.log("making popup");
   let popupContent = "";
   if (feature.properties) {
     popupContent += `
@@ -106,11 +155,12 @@ function geojsonMarkerOptions(feature) {
 const geoLayers = {};
 
 function onEachFeature(feature, layer) {
-  console.log("feature", layer);
+  // console.log("feature", layer);
   feature.dlID = feature.properties.uuid;
+  // console.log("ffff", feature);
 
   // put all features into object
-  geoLayers[feature.properties.uuid] = layer;
+  // geoLayers[feature.properties.uuid] = layer;
 
   if (feature.properties && feature.properties.uuid) {
     if (feature.properties.uuid === clickedId) {
@@ -129,7 +179,7 @@ function pointToLayer(feature, latlng) {
 // load map providers
 const osm = L.tileLayer(
   // `https://api.maptiler.com/maps/basic-4326/{z}/{x}/{y}.png?key=${process.env.MAP_TILER_KEY}`,
-  `https://api.maptiler.com/maps/basic-4326/256/{z}/{x}/{y}@2x.png?key=BFPs9C5VBhPV4bZwUJ9E`,
+  `https://api.maptiler.com/maps/basic-4326/256/{z}/{x}/{y}.png?key=BFPs9C5VBhPV4bZwUJ9E`,
   // "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
   // "http://tilecache.osgeo.org/wms-c/tilecache.py/1.0.0/basic/5/32/23.png",
   // `https://api.mapbox.com/styles/v1/byniko/cli60r38c00wa01pz2ckkdtcx/tiles/256/{z}/{x}/{y}@2x?access_token=${process.env.MAPBOX_TOKEN}`,
@@ -139,7 +189,7 @@ const osm = L.tileLayer(
     tms: false,
     maxZoom: 13,
     noWrap: true,
-    
+
     attribution:
       '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <img  src="https://api.maptiler.com/resources/logo.svg">',
   }
@@ -164,8 +214,14 @@ var clickedId;
 var popupToOpen = false;
 let openedPopup = false;
 
+// const geoJson = window.L.geoJSON(sensors, {
+//   onEachFeature: onEachFeature,
+//   pointToLayer: pointToLayer,
+// }).addTo(map);
+
 // this is our app
 (async function init() {
+  return;
   // get the sensor data
   const sensors = await fetchJson(geoJSONUrl, requestOptions);
   markers.clearLayers();
@@ -174,24 +230,24 @@ let openedPopup = false;
     pointToLayer: pointToLayer,
   }).addTo(map);
   // console.log("f", Object.keys(features).length);
-  console.log("all markers", markers);
+  // console.log("all markers", markers);
 
-  console.log("layers", geoLayers);
+  // console.log("layers", geoLayers);
 
   map.removeLayer(2);
 
   map.on("click", (e) => {
-    console.log("geo json clicked", e);
+    // console.log("geo json clicked", e);
   });
   // console.log("here", features);
   // map.openPopup(features["e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02"]);
   if (popupToOpen) {
     // map.openPopup(popupToOpen);
-    console.log("open?", geoJson.isPopupOpen());
+    // console.log("open?", geoJson.isPopupOpen());
   }
 
   map.on("layeradd", (e) => {
-    console.log("added", e);
+    // console.log("added", e);
   });
 
   if (autoRefresh) setTimeout(init, autoRefresh);

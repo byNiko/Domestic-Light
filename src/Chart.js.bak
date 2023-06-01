@@ -1,0 +1,113 @@
+import Chart from "chart.js/auto";
+
+(async function () {
+  const data = [
+    {
+      "color": "violet",
+      "nm": 415,
+      "intensity": 751
+    },
+    {
+      "color": "light violet",
+      "nm": 445,
+      "intensity": 1557
+    },
+    {
+      "color": "blue",
+      "nm": 480,
+      "intensity": 884
+    },
+    {
+      "color": "green",
+      "nm": 515,
+      "intensity": 821
+    },
+    {
+      "color": "orange",
+      "nm": 555,
+      "intensity": 1083
+    },
+    {
+      "color": "light yellow",
+      "nm": 590,
+      "intensity": 254
+    },
+
+    {
+      "color": "light violet",
+      "nm": 630,
+      "intensity": 1214
+    },
+    {
+      "color": "blue",
+      "nm": 680,
+      "intensity": 1224
+    },
+    {
+      "color": "green",
+      "nm": 515,
+      "intensity": 821
+    },
+    {
+      "color": "orange",
+      "nm": 555,
+      "intensity": 1083
+    },
+    {
+      "color": "light blue",
+      "nm": 630,
+      "intensity": 1214
+    }
+    
+  ];
+
+  new Chart(
+    document.getElementById('acquisitions'),
+    {
+      type: 'scatter',
+      options: {
+        animation: true,
+        plugins: {
+          legend: {
+            display: true
+          },
+          tooltip: {
+            enabled: true
+          }
+        },
+          aspectRatio: 1,
+          scales: {
+            x: {
+              title: {
+                display: true,
+                text: 'Wavelenght (nm)'
+              },
+              // max: 500,
+              ticks: {
+                callback: value => `${value} nm`
+              }
+            },
+            y: {
+              title: {
+                display: true,
+                text: 'Intensity'
+              },
+              // max: 500,
+              ticks: {
+                callback: value => `${value / 1000}k m`
+              }
+            }
+          }
+      },
+      data: {
+        labels: data.map(row => row.nm),
+        datasets: [
+          {
+            label: 'Color Graph',
+            data: data.map(row => row.intensity),
+          }
+        ]
+      }
+    }
+  );
+})();
