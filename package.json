@@ -8,6 +8,8 @@
     "build": "parcel build index.html"
   },
   "dependencies": {
+    "chart.js": "^4.3.0",
+    "dayjs": "^1.11.8",
     "leaflet": "1.9.3",
     "leaflet-providers": "1.13.0",
     "leaflet.markercluster": "1.5.3",
