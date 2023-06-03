@@ -7,6 +7,7 @@ import * as L from "leaflet";
 import "leaflet.markercluster";
 import { makeChart } from "./makeChart";
 import getTime from "./getTime";
+import makeSlider from "./makeSlider";
 
 // custom
 import minZoom from "./minZoom";
@@ -47,7 +48,10 @@ const requestOptions = {
 };
 
 // internal website endpoint
-const userUrl = "https://dev1.3n.design/wp-json/dl/v1/user";
+const dlEndpoint = "https://dev1.3n.design/wp-json";
+const userUrl = `${dlEndpoint}/dl/v1/user`;
+const mediaEndpoint = `${dlEndpoint}/wp/v2/media`;
+
 // functions
 async function fetchJson(url, requestOptions) {
   const resp = await fetch(url, requestOptions);
@@ -81,19 +85,23 @@ function makePopup(feature) {
     <h1>${feature.properties.location.city}</h1>
     <h3>${feature.geometry.coordinates.join()}<h3>
     <h5>${getTime(feature)}</h5>
-    <div class="chartCanvasWrapper" style="position:relative;"><canvas style="width: 100%" id="chart-${
+    <div class="popup--slide-wrapper">
+    <div class="popup--slide">
+    <div class="chart--canvas-wrapper">
+    <canvas class="chart--canvas" id="chart-${
       feature.properties.uuid
-    }"></canvas></div>
-   
-    <div class="properties-items" style="display:none;">`;
-    if (Object.keys(feature.properties.colors).length > 0)
-      for (const key in feature.properties.colors) {
-        popupContent += `<div>${colorList[key]} : ${feature.properties.colors[key]}</div>`;
-      }
-    popupContent += ` <div class="injected-content"></div>`;
-    popupContent += `<a href="/sensor-host/${feature.properties.uuid}" class="popup-link author-info">Author Info</a>`;
-
-    popupContent += ` </div></div>`;
+    }"></canvas>
+    </div><!-- /chart--canvas-wrapper-->
+   </div>  <!-- /popup--slide -->
+   <div class="popup--slide">
+    <div class="injected-content"></div>
+    </div> <!-- popup--slide-->
+        </div> <!--/popup--slide-wraper-->
+        <div class="slide--controls">
+        <button class="popup--slide-btn popup--slide-btn-next">></button>
+      <button class="popup--slide-btn popup--slide-btn-prev"><</button>
+      </div><!-- /slide--control-->
+    </div>`;
   }
 
   return popupContent;
@@ -210,14 +218,26 @@ let openedPopup = false;
   if (autoRefresh) setTimeout(init, autoRefresh);
 })();
 
-function postPopulatePopup(node, feature) {
-  // const userData = await fetchJson(
-  //   `${userUrl}/e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02`
-  // );
-  // const targetDiv = node._contentNode.querySelector(".injected-content");
-  // console.log('what is it', node._contentNode.children[0].id)
-  // targetDiv.innerHTML = `<h3>${userData.data.display_name}</h3>`;
+async function postPopulatePopup(node, feature) {
+  const userData = await fetchJson(
+    `${userUrl}/e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02`
+  );
+
+  const img = (async () => {
+    const mediaData = await fetchJson(
+      `${mediaEndpoint}/${userData.data.dl_meta.featured_image}`
+    );
+    const imgSrc = mediaData.media_details.sizes.full.source_url;
+    console.log("src", imgSrc);
+    const img = document.createElement("img");
+    img.src = imgSrc;
+    const targetDiv = node._contentNode.querySelector(".injected-content");
+    // console.log("what is it", node._contentNode.children[0].id);
+    targetDiv.append(img);
+  })();
+
   setTimeout(() => {
+    makeSlider(node);
     makeChart(activeChartData, `chart-${activeId}`);
   }, 0);
 }
