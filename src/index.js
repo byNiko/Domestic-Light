@@ -5,16 +5,16 @@ import "./styles.css";
 // libraries
 import * as L from "leaflet";
 import "leaflet.markercluster";
-import {makeChart} from "./makeChart";
+import { makeChart } from "./makeChart";
 import getTime from "./getTime";
 
 // custom
-import minZoom from './minZoom';
+import minZoom from "./minZoom";
 import { colorList, wavelengthToHSL } from "./convertColors";
 import { tmg } from "./transverseMercatorUTMGrid";
 
 let activeId;
-let activeChartData
+let activeChartData;
 
 // const setups
 const autoRefresh = false;
@@ -23,13 +23,13 @@ const map = L.map("map", {
   center: [0, 0],
   zoom: 3,
   bounds: [
-      [-90, -260],
-      [90, 180],
-    ],
-    maxBounds: [
-      [-90, -260],
-      [90, 180],
-    ],
+    [-90, -260],
+    [90, 180],
+  ],
+  maxBounds: [
+    [-90, -260],
+    [90, 180],
+  ],
   minZoom: minZoom,
 });
 
@@ -37,6 +37,7 @@ const map = L.map("map", {
 
 // setup External Locations in geo JSON list
 const geoJSONUrl = `https://api.json-generator.com/templates/${process.env.GEO_TOKEN}/data`;
+console.log(geoJSONUrl);
 const myHeaders = new Headers();
 myHeaders.append("Authorization", `Bearer ${process.env.BEARER_TOKEN}`);
 const requestOptions = {
@@ -53,8 +54,6 @@ async function fetchJson(url, requestOptions) {
   const result = await resp.json();
   return result;
 }
-
-
 
 function iconCreateFunction(cluster) {
   var childCount = cluster.getChildCount();
@@ -75,16 +74,16 @@ function iconCreateFunction(cluster) {
 }
 
 function makePopup(feature) {
-  
-  
   let popupContent = "";
   if (feature.properties) {
     popupContent += `
     <div id="${feature.properties.uuid}" class="popup-container">
     <h1>${feature.properties.location.city}</h1>
-    <h3>${(feature.geometry.coordinates).join()}<h3>
+    <h3>${feature.geometry.coordinates.join()}<h3>
     <h5>${getTime(feature)}</h5>
-    <div class="chartCanvasWrapper" style="position:relative;"><canvas style="width: 100%" id="chart-${feature.properties.uuid}"></canvas></div>
+    <div class="chartCanvasWrapper" style="position:relative;"><canvas style="width: 100%" id="chart-${
+      feature.properties.uuid
+    }"></canvas></div>
    
     <div class="properties-items" style="display:none;">`;
     if (Object.keys(feature.properties.colors).length > 0)
@@ -96,7 +95,7 @@ function makePopup(feature) {
 
     popupContent += ` </div></div>`;
   }
- 
+
   return popupContent;
 }
 
@@ -132,13 +131,11 @@ function pointToLayer(feature, latlng) {
   const m = L.circleMarker(latlng, geojsonMarkerOptions(feature));
   m.dlID = feature.properties.uuid;
   m.bindPopup(makePopup(feature));
-  m.on('popupopen', e=>{
-    activeChartData = feature.properties.chartColors
-    activeId = feature.properties.uuid
-  })
- 
-  
-  // put marker in marker cluster layer
+  m.on("popupopen", (e) => {
+    activeChartData = feature.properties.chartColors;
+    activeId = feature.properties.uuid;
+  });
+
   markers.addLayer(m);
   return markers;
 }
@@ -155,14 +152,14 @@ const osm = L.tileLayer(
     tms: false,
     maxZoom: 13,
     noWrap: true,
-    
+
     attribution:
       '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <img  src="https://api.maptiler.com/resources/logo.svg">',
   }
 ).addTo(map);
 
 // transverse mercator Grid
-// let mercatorGrid = L.geoJSON(tmg).addTo(map);
+let mercatorGrid = L.geoJSON(tmg).addTo(map);
 const markerClusterGroupOptions = {
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: true,
@@ -213,24 +210,24 @@ let openedPopup = false;
   if (autoRefresh) setTimeout(init, autoRefresh);
 })();
 
- function postPopulatePopup(node, feature) {
+function postPopulatePopup(node, feature) {
   // const userData = await fetchJson(
   //   `${userUrl}/e83b2240-b0d3-4ea2-9cc3-c802b4cb9d02`
   // );
   // const targetDiv = node._contentNode.querySelector(".injected-content");
   // console.log('what is it', node._contentNode.children[0].id)
   // targetDiv.innerHTML = `<h3>${userData.data.display_name}</h3>`;
-  setTimeout(()=>{
-    makeChart(activeChartData, `chart-${activeId}`)
-    },0)
-  
+  setTimeout(() => {
+    makeChart(activeChartData, `chart-${activeId}`);
+  }, 0);
 }
 
-map.on('add', (e)=>{console.log('added', e)})
+map.on("add", (e) => {
+  console.log("added", e);
+});
 
 map.on("popupopen", async (e) => {
-  console.log("popup event", e);
-  e.popup.on('contentupdate',(e)=>{console.log('update', e)})
+  // console.log("popup event", e);
   postPopulatePopup(e.popup);
   popupToOpen = e.popup;
 
@@ -256,4 +253,3 @@ map.on("popupopen", async (e) => {
 //   "Open Street Map": osm,
 //   "USGS Imagery": USGS_USImagery,
 // };
-// L.control.layers(baseMaps).addTo(map);
