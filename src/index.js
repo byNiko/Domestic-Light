@@ -12,6 +12,7 @@ import { colorList, wavelengthToHSL } from "./convertColors";
 import { tmg } from "./transverseMercatorUTMGrid";
 
 
+
 console.log('zoom', minZoom)
 
 // const setups
