@@ -5,10 +5,13 @@ import "./styles.css";
 // libraries
 import * as L from "leaflet";
 import "leaflet.markercluster";
+import "./zoomCss";
+import "leaflet-customlayer";
 import { makeChart } from "./makeChart";
 import getTime from "./getTime";
 import makeSlider from "./makeSlider";
-
+import { videoIframe } from "./videoIframe";
+import { Kitten } from "./L.KittenLayer";
 // custom
 import minZoom from "./minZoom";
 import { colorList, wavelengthToHSL } from "./convertColors";
@@ -167,7 +170,7 @@ const osm = L.tileLayer(
 ).addTo(map);
 
 // transverse mercator Grid
-let mercatorGrid = L.geoJSON(tmg).addTo(map);
+// let mercatorGrid = L.geoJSON(tmg).addTo(map);
 const markerClusterGroupOptions = {
   spiderfyOnMaxZoom: true,
   showCoverageOnHover: true,
@@ -254,6 +257,65 @@ map.on("popupopen", async (e) => {
   // return;
 });
 
+var videoUrl = "https://www.mapbox.com/bites/00188/patricia_nasa.webm",
+  videoBounds = [
+    [32, -130],
+    [13, -100],
+  ];
+L.videoOverlay(videoUrl, videoBounds).addTo(map);
+
+var customLayer = new window.L.customLayer({
+  container: document.createElement("div"), // The DomElement object to display.
+  minZoom: 0, // Minimum zoom level of the layer.
+  maxZoom: 18, // Maximum zoom level of the layer.
+  opacity: 0.51, // Opacity of the layer.
+  visible: true, // Visible of the layer.
+  zIndex: 100, // The explicit zIndex of the layer.
+});
+
+const x = map.getContainer();
+const pane = x.querySelector(".leaflet-overlay-pane");
+pane.append(videoIframe);
+console.log("here", pane);
+
+const iframeBounds = [
+  [32, -130],
+  [13, -100],
+];
+const iframeSrc =
+  "https://player.vimeo.com/video/803881950?h=dcaf80b5b0&amp;background=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;controls=0&amp;playsinline=1&amp;muted=1";
+
+// x.append(iframe);
+
+// map.createPane("videoOverlay", iframe);
+
+// const customOverlay = customLayer.options.container;
+// customOverlay.append(iframe);
+// customOverlay.id = "overlay";
+// customOverlay.classList.add("customOverlay");
+
+// customLayer.on("layer-beforemount", function () {
+//   console.log("layerBeforeMount");
+// });
+
+// customLayer.on("layer-mounted", function () {
+//   console.log("layerMounted");
+// });
+
+// customLayer.on("layer-render", function () {
+//   this.setFullLayerBounds();
+// });
+
+// customLayer.on("layer-beforedestroy", function () {
+//   console.log("layerBeforeDestroy");
+// });
+
+// customLayer.on("layer-destroyed", function () {
+//   console.log("layerDestroyed");
+// });
+
+// customLayer.addTo(map);
+
 // map.on("popupclose", (e) => {
 //   console.log("e", e);
 //   popupToOpen = false;
@@ -273,3 +335,7 @@ map.on("popupopen", async (e) => {
 //   "Open Street Map": osm,
 //   "USGS Imagery": USGS_USImagery,
 // };
+
+var y = new Kitten();
+// y.addTo(map);
+// window.L.TileLayer.Kitten().addTo(map);
