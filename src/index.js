@@ -12,6 +12,7 @@ import getTime from "./getTime";
 import makeSlider from "./makeSlider";
 import { videoIframe } from "./videoIframe";
 import { Kitten } from "./L.KittenLayer";
+import toDegrees from "./toDegrees";
 // custom
 import minZoom from "./minZoom";
 import { colorList, wavelengthToHSL } from "./convertColors";
@@ -86,7 +87,10 @@ function makePopup(feature) {
     popupContent += `
     <div id="${feature.properties.uuid}" class="popup-container">
     <h1>${feature.properties.location.city}</h1>
-    <h3>${feature.geometry.coordinates.join()}<h3>
+    <h3>${toDegrees(
+      feature.geometry.coordinates[1],
+      feature.geometry.coordinates[0]
+    )}, ${feature.geometry.coordinates.join()}<h3>
     <h5>${getTime(feature)}</h5>
     <div class="popup--slide-wrapper">
     <div class="popup--slide">
@@ -114,7 +118,7 @@ function geojsonMarkerOptions(feature) {
   return {
     id: feature.properties.uuid,
     radius: 5,
-    fillColor: feature.properties.marker_color,
+    fillColor: `hsl(${feature.properties.marker_color.Hue}, ${feature.properties.marker_color.Saturation}, ${feature.properties.marker_color.Luminance})`,
     color: "#000",
     weight: 1,
     opacity: 1,
