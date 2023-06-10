@@ -85,13 +85,23 @@ function makePopup(feature) {
   let popupContent = "";
   if (feature.properties) {
     popupContent += `
+    <header class="popup--header">
     <div id="${feature.properties.uuid}" class="popup-container">
-    <h1>${feature.properties.location.city}</h1>
-    <h3>${toDegrees(
+    <div class="popup--city">
+    ${feature.properties.location.city}
+    </div>
+    <div class="popup--province">
+    ${feature.properties.location.province} | 
+    ${feature.properties.location.country}
+    </div>
+    <div class="popup--latLng">
+    ${toDegrees(
       feature.geometry.coordinates[1],
       feature.geometry.coordinates[0]
-    )}, ${feature.geometry.coordinates.join()}<h3>
-    <h5>${getTime(feature)}</h5>
+    )}
+    </div>
+    <div clas="popup--time">Last reading: ${getTime(feature)}</h5>
+    </header>
     <div class="popup--slide-wrapper">
     <div class="popup--slide">
     <div class="chart--canvas-wrapper">
@@ -235,7 +245,6 @@ async function postPopulatePopup(node, feature) {
       `${mediaEndpoint}/${userData.data.dl_meta.featured_image}`
     );
     const imgSrc = mediaData.media_details.sizes.full.source_url;
-    console.log("src", imgSrc);
     const img = document.createElement("img");
     img.src = imgSrc;
     const targetDiv = node._contentNode.querySelector(".injected-content");

@@ -22,7 +22,26 @@ body {
   padding: 0.51rem;
   font-weight: 700;
 }
-
+.popup--header {
+  margin-top: 30px;
+  margin-bottom: 1rem;
+}
+.popup--city {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.popup--latLng {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  padding: 5px;
+  background: grey;
+  color: white;
+  border-bottom-right-radius: 1rem;
+  border-bottom-left-radius: 1rem;
+}
 .popup-container {
   width: 300px;
 }
@@ -79,13 +98,13 @@ body {
 }
 
 .popup--slide-btn-prev {
-  top: 45%;
-  left: 2%;
+  bottom: 5%;
+  left: 20%;
 }
 
 .popup--slide-btn-next {
-  top: 45%;
-  right: 2%;
+  bottom: 5%;
+  right: 20%;
 }
 
 .map-video {
