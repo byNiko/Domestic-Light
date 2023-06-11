@@ -6,6 +6,10 @@ body {
   height: 100vh;
 }
 
+.leaflet-container {
+  background: darkblue;
+}
+
 .marker-cluster {
   background-color: hsla(0, 0%, 100%, 0.7);
   border-radius: 50%;

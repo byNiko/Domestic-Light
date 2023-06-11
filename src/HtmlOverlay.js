@@ -113,11 +113,11 @@ export const HtmlOverlay = L.Layer.extend({
     // avec des rÃ©glages css pour Ã©viter des soucis...
     this._inner = this._dom.childNodes[0]; // un seul noeud
     this._inner.style.position = "absolute";
-    this._inner.style.left = "-.24%";
-    this._inner.style.top = "13%";
+    this._inner.style.left = "-.338%";
+    this._inner.style.top = "33%";
     this._inner.style.pointerEvents = "none";
-    this._inner.style.opacity = ".8";
-    this._inner.style["transform-origin"] = "left top";
+    this._inner.style.opacity = ".58";
+    this._inner.style["transform-origin"] = "left center";
   },
 
   _animateZoom: function (e) {

@@ -22,22 +22,21 @@ import { tmg } from "./transverseMercatorUTMGrid";
 let activeId;
 let activeChartData;
 
+const mapBounds = [
+  [30, 163],
+  [-10, -255],
+];
+
 // const setups
 const autoRefresh = false;
 const map = L.map("map", {
   crs: L.CRS.EPSG4326,
-  center: [0, 0],
+  center: [-25.274398, 133.775136],
   zoom: 2,
   maxBoundsViscosity: 1,
   noWrap: true,
-  bounds: [
-    [-90, -255],
-    [90, 163],
-  ],
-  maxBounds: [
-    [-90, -255],
-    [90, 163],
-  ],
+  bounds: mapBounds,
+  maxBounds: mapBounds,
   // minZoom: minZoom,
 });
 
@@ -177,8 +176,10 @@ const osm = L.tileLayer(
   // `http://{s}.tile.cloudmade.com/9c844409f5b845ae93ac38388077f90a/997/256/{z}/{x}/{y}.png`,
   {
     tms: false,
+    center: [-25.274398, 133.775136],
     maxZoom: 3,
     noWrap: false, //true,
+    opacity: 0.35,
 
     attribution:
       '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <img  src="https://api.maptiler.com/resources/logo.svg">',
@@ -268,9 +269,19 @@ map.on("popupopen", async (e) => {
   // console.log("popup event", e);
   postPopulatePopup(e.popup);
   popupToOpen = e.popup;
+  // map.getCenter();
 
   // return;
 });
+
+// map.on("popupopen", function (e) {
+//   // find the pixel location on the map where the popup anchor is
+//   var px = map.project(e.popup._latlng);
+//   // find the height of the popup container, divide by 2 to centre, subtract from the Y axis of marker location
+//   px.y -= e.popup._container.clientHeight / 2;
+//   // pan to new center
+//   map.panTo(map.unproject(px), { animate: true });
+// });
 
 const iframeUrl =
   "https://player.vimeo.com/video/803881950?h=dcaf80b5b0&amp;background=1&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;controls=0&amp;playsinline=1&amp;muted=1&amp;transparent=0";
@@ -278,8 +289,7 @@ const iframe = `<iframe  width="300" height="84.2" src="${iframeUrl}" frameborde
 const imageBounds = [
   // [0, 0],
   // [0, 0],
-  [-90, -257],
-  [90, 163],
+  mapBounds,
 ];
 
 const videoOverlayOptions = {
