@@ -27,7 +27,7 @@ const autoRefresh = false;
 const map = L.map("map", {
   crs: L.CRS.EPSG4326,
   center: [0, 0],
-  zoom: 3,
+  zoom: 2,
   maxBoundsViscosity: 1,
   noWrap: true,
   bounds: [

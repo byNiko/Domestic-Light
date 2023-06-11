@@ -113,8 +113,8 @@ export const HtmlOverlay = L.Layer.extend({
     // avec des rÃ©glages css pour Ã©viter des soucis...
     this._inner = this._dom.childNodes[0]; // un seul noeud
     this._inner.style.position = "absolute";
-    this._inner.style.left = "0.5%";
-    this._inner.style.top = "12.5%";
+    this._inner.style.left = "-.24%";
+    this._inner.style.top = "13%";
     this._inner.style.pointerEvents = "none";
     this._inner.style.opacity = ".8";
     this._inner.style["transform-origin"] = "left top";
