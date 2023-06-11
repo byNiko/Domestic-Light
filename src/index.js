@@ -28,15 +28,17 @@ const map = L.map("map", {
   crs: L.CRS.EPSG4326,
   center: [0, 0],
   zoom: 3,
+  maxBoundsViscosity: 1,
+  noWrap: true,
   bounds: [
-    [-90, -260],
-    [90, 180],
+    [-90, -255],
+    [90, 163],
   ],
   maxBounds: [
-    [-90, -260],
-    [90, 180],
+    [-90, -255],
+    [90, 163],
   ],
-  minZoom: minZoom,
+  // minZoom: minZoom,
 });
 
 // map.setMaxBounds( map.getBounds())
@@ -96,8 +98,8 @@ function makePopup(feature) {
     </div>
     <div class="popup--latLng">
     ${toDegrees(
-      feature.geometry.coordinates[1],
-      feature.geometry.coordinates[0]
+      feature.geometry.coordinates[1], // LNG
+      feature.geometry.coordinates[0] // LAT
     )}
     </div>
     <div clas="popup--time">Last reading: ${getTime(feature)}</h5>
@@ -175,8 +177,8 @@ const osm = L.tileLayer(
   // `http://{s}.tile.cloudmade.com/9c844409f5b845ae93ac38388077f90a/997/256/{z}/{x}/{y}.png`,
   {
     tms: false,
-    maxZoom: 13,
-    noWrap: true,
+    maxZoom: 3,
+    noWrap: false, //true,
 
     attribution:
       '© <a href="https://www.mapbox.com/map-feedback/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <img  src="https://api.maptiler.com/resources/logo.svg">',
@@ -271,13 +273,13 @@ map.on("popupopen", async (e) => {
 });
 
 const iframeUrl =
-  "https://player.vimeo.com/video/803881950?h=dcaf80b5b0&amp;background=0&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;controls=0&amp;playsinline=1&amp;muted=1";
-const iframe = `<iframe  src="${iframeUrl}" frameborder="0" allow="autoplay"></iframe>`;
+  "https://player.vimeo.com/video/803881950?h=dcaf80b5b0&amp;background=1&amp;badge=0&amp;autopause=0&amp;player_id=0&amp;app_id=58479&amp;autoplay=1&amp;controls=0&amp;playsinline=1&amp;muted=1&amp;transparent=0";
+const iframe = `<iframe  width="300" height="84.2" src="${iframeUrl}" frameborder="0" allow="autoplay"></iframe>`;
 const imageBounds = [
   // [0, 0],
   // [0, 0],
-  [-90, -260],
-  [90, 180],
+  [-90, -257],
+  [90, 163],
 ];
 
 const videoOverlayOptions = {
