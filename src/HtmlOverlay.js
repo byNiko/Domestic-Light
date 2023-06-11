@@ -8,9 +8,9 @@ export const HtmlOverlay = L.Layer.extend({
   options: {
     interactive: false,
     zIndex: 1,
-    className: "iframeWrapper",
+    className: "",
     idName: "",
-    zoom: "-1",
+    zoom: "0",
     // zoom: "10", // le niveau de zoom ou la div est affichÃ© Ã  l'Ã©chelle 1
   },
 
@@ -117,7 +117,7 @@ export const HtmlOverlay = L.Layer.extend({
     this._inner.style.top = 0;
     this._inner.style.pointerEvents = "none";
     this._inner.style.opacity = ".8";
-    this._inner.style["transform-origin"] = "center 66%";
+    this._inner.style["transform-origin"] = "left top";
   },
 
   _animateZoom: function (e) {
