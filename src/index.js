@@ -276,7 +276,7 @@ const iframe = `<iframe  src="${iframeUrl}" frameborder="0" allow="autoplay"></i
 const imageBounds = [
   [0, 0],
   [0, 0],
-  // [-90, -180],
+  //  [-90, -260],
   // [90, 180],
 ];
 

@@ -117,7 +117,7 @@ export const HtmlOverlay = L.Layer.extend({
     this._inner.style.top = 0;
     this._inner.style.pointerEvents = "none";
     this._inner.style.opacity = ".8";
-    this._inner.style["transform-origin"] = "center center";
+    this._inner.style["transform-origin"] = "center 66%";
   },
 
   _animateZoom: function (e) {
